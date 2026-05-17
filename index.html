@@ -491,9 +491,77 @@ h3 { font-size: 14px; font-weight: 500; color: var(--text-dark); }
 }
 .confirm-title { font-size: 16px; font-weight: 500; color: var(--dark-brown); margin-bottom: 8px; }
 .confirm-msg { font-size: 13px; color: var(--text-mid); margin-bottom: 20px; line-height: 1.6; }
+
+/* ── Private login screen ── */
+.auth-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--cream);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.auth-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: 0 8px 24px rgba(120,80,50,0.12);
+  padding: 28px 24px;
+  text-align: center;
+}
+.auth-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 22px;
+  color: var(--dark-brown);
+  margin-bottom: 8px;
+}
+.auth-desc {
+  font-size: 13px;
+  color: var(--text-mid);
+  line-height: 1.7;
+  margin-bottom: 18px;
+}
+.auth-user {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 12px;
+  word-break: break-all;
+}
+.auth-error {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #B91C1C;
+  line-height: 1.6;
+}
+.topbar-actions { display:flex; align-items:center; gap:8px; }
+.auth-small-btn {
+  border: 1px solid var(--border);
+  background: var(--oat);
+  color: var(--brown);
+  border-radius: 18px;
+  padding: 7px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
 </style>
 </head>
 <body>
+
+<!-- Private login screen -->
+<div class="auth-screen" id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-title">✦ Pawfect Studio Planner</div>
+    <div class="auth-desc">這是私人接單管理工具。<br>請使用已授權的 Google 帳號登入。</div>
+    <button class="btn-primary" type="button" onclick="signInWithGoogle()">使用 Google 登入</button>
+    <div class="auth-user" id="auth-user-text">允許使用者：Hedy / Pawfect Studio</div>
+    <div class="auth-error" id="auth-error"></div>
+  </div>
+</div>
 
 <!-- Top bar -->
 <div class="topbar">
@@ -501,7 +569,7 @@ h3 { font-size: 14px; font-weight: 500; color: var(--text-dark); }
     <div class="topbar-title">✦ Pawfect Studio Planner</div>
     <div class="topbar-subtitle" id="topbar-date"></div>
   </div>
-  <button class="topbar-btn" onclick="openSearch()">🔍</button>
+  <div class="topbar-actions"><button class="auth-small-btn" id="sync-status">未登入</button><button class="auth-small-btn" onclick="signOutUser()">登出</button><button class="topbar-btn" onclick="openSearch()">🔍</button></div>
 </div>
 
 <!-- Pages -->
@@ -682,7 +750,7 @@ h3 { font-size: 14px; font-weight: 500; color: var(--text-dark); }
         <div class="photo-grid" id="form-photo-grid"></div>
         <label class="photo-add" style="margin-top:8px" for="f-photos">＋</label>
         <input id="f-photos" type="file" accept="image/*" multiple style="display:none" onchange="handleFormPhotoUpload(this)">
-        <div class="photo-hint">只上傳寵物照片，請避免放入含有人臉、地址、電話或其他個資的截圖。此版本照片存在本機瀏覽器；兩人同步需接 Firebase 登入與 Storage 權限。</div>
+        <div class="photo-hint">只上傳寵物照片，請避免放入含有人臉、地址、電話或其他個資的截圖。照片只存在目前這台裝置，不會上傳雲端；訂單與排程會同步。</div>
       </div>
 
       <div style="margin-top:8px">
@@ -714,7 +782,29 @@ h3 { font-size: 14px; font-weight: 500; color: var(--text-dark); }
   <img id="photo-viewer-img" src="" alt="寵物照片預覽" onclick="event.stopPropagation()">
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore-compat.js"></script>
 <script>
+// ── Firebase private sync ─────────────────────────────
+const ALLOWED_EMAILS = ['bubo870831@gmail.com', 'pawfectstudiotw@gmail.com'];
+const firebaseConfig = {
+  apiKey: "AIzaSyBrHywNgAJEOIcdq6B_BYx3LYF82tLja7Q",
+  authDomain: "pawfect-studio-planner.firebaseapp.com",
+  projectId: "pawfect-studio-planner",
+  storageBucket: "pawfect-studio-planner.firebasestorage.app",
+  messagingSenderId: "297699260953",
+  appId: "1:297699260953:web:bab0c94dd3732da781c888"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const ORDERS_DOC = db.collection('planner').doc('orders');
+let currentUser = null;
+let unsubscribeOrders = null;
+let applyingRemote = false;
+let remoteLoaded = false;
+
 // ── Data ──────────────────────────────────────────────
 const STATUS_LABELS = {
   waiting: '排隊中', drafting: '草稿中', draft_confirm: '等待草稿確認',
@@ -728,13 +818,38 @@ const STATUS_CSS = {
   producing: 'producing', ready_ship: 'ready-ship', shipped: 'shipped', done: 'done'
 };
 
-let orders = JSON.parse(localStorage.getItem('pawfectOrders') || '[]');
+let orders = [];
 let editingId = null;
 let calYear, calMonth;
 const today = new Date(); today.setHours(0,0,0,0);
 calYear = today.getFullYear(); calMonth = today.getMonth();
 
-function saveData() { localStorage.setItem('pawfectOrders', JSON.stringify(orders)); }
+function cleanOrderForCloud(order) {
+  const { photos, ...rest } = order;
+  return rest;
+}
+function cleanOrdersForCloud(list) {
+  return list.map(cleanOrderForCloud);
+}
+function saveLocalCache() {
+  localStorage.setItem('pawfectOrdersCache', JSON.stringify(cleanOrdersForCloud(orders)));
+}
+async function saveData() {
+  saveLocalCache();
+  if (!currentUser || applyingRemote) return;
+  try {
+    await ORDERS_DOC.set({
+      orders: cleanOrdersForCloud(orders),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedBy: currentUser.email
+    }, { merge: true });
+    setSyncStatus('已同步');
+  } catch (err) {
+    console.error(err);
+    setSyncStatus('同步失敗');
+    showToast('同步失敗，請檢查網路或 Firebase 權限');
+  }
+}
 function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
 function dateStr(d) {
@@ -1110,11 +1225,11 @@ function openDetail(id) {
   body += `<div class="detail-section">
     <div class="detail-label">寵物照片</div>
     <div class="photo-grid">
-      ${renderPhotoItems(o.photos || [], id, 'detail')}
+      ${renderPhotoItems(getLocalPhotos(id), id, 'detail')}
       <label class="photo-add" for="detail-photo-${id}">＋</label>
       <input id="detail-photo-${id}" type="file" accept="image/*" multiple style="display:none" onchange="addDetailPhotos('${id}', this)">
     </div>
-    <div class="photo-hint">可上傳寵物參考照片，點照片可開新頁查看。</div>
+    <div class="photo-hint">可上傳寵物參考照片；照片只存在目前這台裝置，不會同步到另一支手機。</div>
   </div>`;
 
   // Status changer
@@ -1190,7 +1305,7 @@ function openEdit(id) {
   document.getElementById('f-product').value = o.productDeadline||'';
   document.getElementById('f-ship').value = o.shipDeadline||'';
   document.getElementById('f-notes').value = o.notes||'';
-  formPhotos = [...(o.photos || [])];
+  formPhotos = [...getLocalPhotos(id)];
   renderFormPhotos();
 
   document.querySelectorAll('#draw-tags .tag-toggle').forEach(t => {
@@ -1239,15 +1354,17 @@ function saveOrder(e) {
     productDeadline: document.getElementById('f-product').value,
     shipDeadline: document.getElementById('f-ship').value,
     notes: document.getElementById('f-notes').value.trim(),
-    photos: formPhotos,
   };
 
+  let savedId = editingId;
   if (editingId) {
     const idx = orders.findIndex(x=>x.id===editingId);
     orders[idx] = { ...orders[idx], ...data };
   } else {
-    orders.push({ id: genId(), status: 'waiting', ...data });
+    savedId = genId();
+    orders.push({ id: savedId, status: 'waiting', ...data });
   }
+  setLocalPhotos(savedId, formPhotos);
   saveData();
   closeForm();
   renderPage(getCurrentPage());
@@ -1257,6 +1374,29 @@ function saveOrder(e) {
 
 
 // ── Photos ─────────────────────────────────────────────
+function getAllLocalPhotos() {
+  try { return JSON.parse(localStorage.getItem('pawfectLocalPhotos') || '{}'); }
+  catch { return {}; }
+}
+function saveAllLocalPhotos(map) {
+  localStorage.setItem('pawfectLocalPhotos', JSON.stringify(map));
+}
+function getLocalPhotos(orderId) {
+  const map = getAllLocalPhotos();
+  return map[orderId] || [];
+}
+function setLocalPhotos(orderId, photos) {
+  if (!orderId) return;
+  const map = getAllLocalPhotos();
+  map[orderId] = photos || [];
+  saveAllLocalPhotos(map);
+}
+function deleteLocalPhotos(orderId) {
+  const map = getAllLocalPhotos();
+  delete map[orderId];
+  saveAllLocalPhotos(map);
+}
+
 function renderPhotoItems(photos, orderId=null, mode='form') {
   if (!photos || photos.length === 0) return '';
   return photos.map((p, idx) => {
@@ -1306,12 +1446,12 @@ async function addDetailPhotos(id, input) {
   const files = [...(input.files || [])];
   if (!o || !files.length) return;
   try {
-    o.photos = o.photos || [];
+    const localPhotos = getLocalPhotos(id);
     for (const file of files) {
       const data = await compressImageFile(file);
-      o.photos.push({ name: file.name, data, createdAt: new Date().toISOString() });
+      localPhotos.push({ name: file.name, data, createdAt: new Date().toISOString() });
     }
-    saveData();
+    setLocalPhotos(id, localPhotos);
     openDetail(id);
     renderPage(getCurrentPage());
     showToast(`已上傳 ${files.length} 張寵物照片`);
@@ -1323,10 +1463,10 @@ async function addDetailPhotos(id, input) {
 }
 
 function removeDetailPhoto(id, idx) {
-  const o = orders.find(x => x.id === id);
-  if (!o || !o.photos) return;
-  o.photos.splice(idx, 1);
-  saveData();
+  const localPhotos = getLocalPhotos(id);
+  if (!localPhotos.length) return;
+  localPhotos.splice(idx, 1);
+  setLocalPhotos(id, localPhotos);
   openDetail(id);
   renderPage(getCurrentPage());
   showToast('已刪除照片');
@@ -1363,6 +1503,7 @@ function confirmDelete(id) {
   document.getElementById('confirm-modal').classList.add('show');
   document.getElementById('confirm-ok-btn').onclick = () => {
     orders = orders.filter(x=>x.id!==pendingDeleteId);
+    deleteLocalPhotos(pendingDeleteId);
     saveData();
     closeConfirm(); closeDetail(); closeForm();
     renderPage(getCurrentPage());
@@ -1388,8 +1529,8 @@ function openPhotoViewer(idx, orderId, mode) {
   if (mode === 'form') {
     photo = formPhotos[idx];
   } else {
-    const o = orders.find(x => x.id === orderId);
-    photo = o && o.photos ? o.photos[idx] : null;
+    const photos = getLocalPhotos(orderId);
+    photo = photos ? photos[idx] : null;
   }
   const src = photo ? (photo.data || photo) : '';
   if (!src) return;
@@ -1419,21 +1560,96 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-// ── Demo data (first launch) ───────────────────────────
-if (orders.length === 0) {
-  const today8 = new Date(); today8.setHours(0,0,0,0);
-  const fmt = d => d.toISOString().slice(0,10);
-  const add = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return fmt(x); };
-  const seed = [
-    { id:genId(), clientName:'小花', drawItems:['大頭'], products:['鑰匙圈'], status:'waiting', paidAmount:2800, paidDate:add(today8,-20), startDate:add(today8,5), draftDeadline:add(today8,7), colorDeadline:add(today8,12) },
-    { id:genId(), clientName:'Mochi', drawItems:['半身'], products:['防水貼紙'], status:'drafting', paidAmount:3200, paidDate:add(today8,-10), startDate:add(today8,-2), draftDeadline:add(today8,1), colorDeadline:add(today8,6), shipDeadline:add(today8,20) },
-    { id:genId(), clientName:'YY', drawItems:['全身'], products:['法蘭絨毛毯'], status:'coloring', paidAmount:5500, paidDate:add(today8,-15), startDate:add(today8,-8), draftDeadline:add(today8,-6), colorDeadline:add(today8,2), shipDeadline:add(today8,18) },
-    { id:genId(), clientName:'阿喵', drawItems:['大頭'], products:[], status:'done', paidAmount:1800, paidDate:add(today8,-45), startDate:add(today8,-30), draftDeadline:add(today8,-28), colorDeadline:add(today8,-23), completedDate:add(today8,-20), shipDeadline:add(today8,-20) },
-  ];
-  orders = seed;
-  saveData();
-  renderPage('wait');
+// ── Auth and cloud sync ─────────────────────────────────
+function setSyncStatus(text) {
+  const el = document.getElementById('sync-status');
+  if (el) el.textContent = text;
 }
+function isAllowedUser(user) {
+  return !!user && ALLOWED_EMAILS.includes((user.email || '').toLowerCase());
+}
+function signInWithGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(err => {
+    console.error(err);
+    document.getElementById('auth-error').textContent = '登入失敗：' + (err.message || err.code);
+  });
+}
+function signOutUser() {
+  auth.signOut();
+}
+function showLogin(message='') {
+  const screen = document.getElementById('auth-screen');
+  const err = document.getElementById('auth-error');
+  if (screen) screen.style.display = 'flex';
+  if (err) err.textContent = message;
+  setSyncStatus('未登入');
+}
+function hideLogin() {
+  const screen = document.getElementById('auth-screen');
+  if (screen) screen.style.display = 'none';
+}
+function loadLocalImportCandidate() {
+  // 若之前單機版有資料，第一次雲端是空的時可自動帶入；照片仍只留本機。
+  const raw = localStorage.getItem('pawfectOrders') || localStorage.getItem('pawfectOrdersCache') || '[]';
+  try {
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? cleanOrdersForCloud(arr) : [];
+  } catch { return []; }
+}
+function startOrderListener() {
+  if (unsubscribeOrders) unsubscribeOrders();
+  setSyncStatus('同步中...');
+  unsubscribeOrders = ORDERS_DOC.onSnapshot(async snap => {
+    applyingRemote = true;
+    if (snap.exists) {
+      const data = snap.data() || {};
+      orders = Array.isArray(data.orders) ? data.orders : [];
+    } else {
+      const localImport = loadLocalImportCandidate();
+      orders = localImport;
+      if (localImport.length) {
+        await ORDERS_DOC.set({
+          orders: localImport,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedBy: currentUser.email
+        }, { merge: true });
+      }
+    }
+    saveLocalCache();
+    applyingRemote = false;
+    remoteLoaded = true;
+    renderPage(getCurrentPage());
+    setSyncStatus('已同步');
+  }, err => {
+    console.error(err);
+    setSyncStatus('同步失敗');
+    showToast('讀取雲端資料失敗，請檢查 Firestore 規則');
+  });
+}
+
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    currentUser = null;
+    orders = [];
+    if (unsubscribeOrders) { unsubscribeOrders(); unsubscribeOrders = null; }
+    renderPage(getCurrentPage());
+    showLogin();
+    return;
+  }
+  if (!isAllowedUser(user)) {
+    const email = user.email || '此帳號';
+    auth.signOut();
+    showLogin(`${email} 沒有使用權限，請改用授權帳號登入。`);
+    return;
+  }
+  currentUser = user;
+  hideLogin();
+  document.getElementById('auth-user-text').textContent = `已登入：${user.email}`;
+  setSyncStatus('同步中...');
+  startOrderListener();
+});
 </script>
 </body>
 </html>
