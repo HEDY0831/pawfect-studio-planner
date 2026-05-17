@@ -458,6 +458,26 @@ h3 { font-size: 14px; font-weight: 500; color: var(--text-dark); }
 }
 .photo-hint { font-size: 11px; color: var(--text-light); margin-top: 6px; line-height: 1.5; }
 
+/* Photo viewer: avoid opening base64 images in a new Safari tab, which may show blank */
+.photo-viewer {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(44,31,20,0.86);
+  display: none; align-items: center; justify-content: center;
+  padding: 18px;
+}
+.photo-viewer.show { display: flex; }
+.photo-viewer img {
+  max-width: 100%; max-height: 82vh; object-fit: contain;
+  border-radius: 14px; background: var(--white);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.25);
+}
+.photo-viewer-close {
+  position: fixed; top: calc(16px + env(safe-area-inset-top)); right: 16px;
+  width: 42px; height: 42px; border-radius: 50%; border: none;
+  background: rgba(255,255,255,0.92); color: var(--dark-brown);
+  font-size: 24px; line-height: 1; cursor: pointer;
+}
+
 /* Confirm dialog */
 .confirm-modal {
   position: fixed; inset: 0; background: rgba(44,31,20,0.5);
@@ -687,6 +707,12 @@ h3 { font-size: 14px; font-weight: 500; color: var(--text-dark); }
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
+
+<!-- Photo viewer -->
+<div class="photo-viewer" id="photo-viewer" onclick="closePhotoViewer()">
+  <button class="photo-viewer-close" type="button" onclick="closePhotoViewer(event)">×</button>
+  <img id="photo-viewer-img" src="" alt="寵物照片預覽" onclick="event.stopPropagation()">
+</div>
 
 <script>
 // ── Data ──────────────────────────────────────────────
@@ -1241,7 +1267,7 @@ function renderPhotoItems(photos, orderId=null, mode='form') {
       ? `<button type="button" class="photo-remove" onclick="removeFormPhoto(${idx})">×</button>`
       : `<button type="button" class="photo-remove" onclick="removeDetailPhoto('${orderId}', ${idx})">×</button>`;
     return `<div class="photo-item">
-      <img class="photo-thumb" src="${src}" alt="${safeName}" onclick="window.open('${src}', '_blank')">
+      <img class="photo-thumb" src="${src}" alt="${safeName}" onclick="openPhotoViewer(${idx}, '${orderId || 'form'}', '${mode}')">
       ${removeBtn}
     </div>`;
   }).join('');
@@ -1354,6 +1380,31 @@ function openSearch() {
   );
   if (results.length === 0) { showToast('找不到結果'); return; }
   openDetail(results[0].id);
+}
+
+
+function openPhotoViewer(idx, orderId, mode) {
+  let photo = null;
+  if (mode === 'form') {
+    photo = formPhotos[idx];
+  } else {
+    const o = orders.find(x => x.id === orderId);
+    photo = o && o.photos ? o.photos[idx] : null;
+  }
+  const src = photo ? (photo.data || photo) : '';
+  if (!src) return;
+  const viewer = document.getElementById('photo-viewer');
+  const img = document.getElementById('photo-viewer-img');
+  img.src = src;
+  viewer.classList.add('show');
+}
+
+function closePhotoViewer(e) {
+  if (e) e.stopPropagation();
+  const viewer = document.getElementById('photo-viewer');
+  const img = document.getElementById('photo-viewer-img');
+  viewer.classList.remove('show');
+  img.src = '';
 }
 
 // ── Helpers ────────────────────────────────────────────
