@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Pawfect Studio Planner</title>
+<meta name="theme-color" content="#FAF7F2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Pawfect Planner">
+<meta name="mobile-web-app-capable" content="yes">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream: #FAF7F2;
+  --oat: #F2EDE3;
+  --latte: #E8DDD0;
+  --sand: #D4C4B0;
+  --caramel: #B08968;
+  --brown: #7B5E42;
+  --dark-brown: #4A3728;
+  --fog-pink: #E8D5CF;
+  --pink-text: #8B5E57;
+  --sage: #B8C5B0;
+  --sage-text: #4A6044;
+  --slate-blue: #B0BDC8;
+  --blue-text: #3D5268;
+  --apricot: #E8C5A0;
+  --apricot-text: #7A4F2A;
+  --white: #FFFEFB;
+  --text-dark: #2C1F14;
+  --text-mid: #6B5040;
+  --text-light: #A08878;
+  --border: #DDD1C0;
+  --shadow: rgba(120, 80, 50, 0.08);
+
+  /* status colors */
+  --s-waiting: #C4A882;
+  --s-waiting-bg: #F5EDDF;
+  --s-waiting-text: #6B4F2A;
+  --s-drafting: #7B5E42;
+  --s-drafting-bg: #EDE5DC;
+  --s-drafting-text: #3D2A14;
+  --s-draft-confirm: #9B8E7A;
+  --s-draft-confirm-bg: #F0EBE3;
+  --s-coloring: #C8935A;
+  --s-coloring-bg: #F5E8D8;
+  --s-coloring-text: #7A4A18;
+  --s-color-confirm: #B8A490;
+  --s-color-confirm-bg: #EDE8E0;
+  --s-layout: #8FA8B8;
+  --s-layout-bg: #DDE8F0;
+  --s-layout-text: #3A5A70;
+  --s-producing: #7090A8;
+  --s-producing-bg: #D5E4EF;
+  --s-producing-text: #2A4F68;
+  --s-ready-ship: #C8A0A8;
+  --s-ready-ship-bg: #F0DDE0;
+  --s-ready-ship-text: #6A3840;
+  --s-shipped: #B0B8C8;
+  --s-shipped-bg: #E0E5EF;
+  --s-shipped-text: #3A4A60;
+  --s-done: #8FB890;
+  --s-done-bg: #DCF0DD;
+  --s-done-text: #2A5A30;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'Noto Sans TC', sans-serif;
+  background: var(--cream);
+  color: var(--text-dark);
+  min-height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ── Typography ── */
+h1 { font-family: 'Noto Serif TC', serif; font-size: 18px; font-weight: 500; color: var(--dark-brown); }
+h2 { font-family: 'Noto Serif TC', serif; font-size: 16px; font-weight: 500; color: var(--dark-brown); }
+h3 { font-size: 14px; font-weight: 500; color: var(--text-dark); }
+
+/* ── Top bar ── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.topbar-title { font-family: 'Noto Serif TC', serif; font-size: 16px; font-weight: 500; color: var(--dark-brown); }
+.topbar-subtitle { font-size: 11px; color: var(--text-light); margin-top: 1px; }
+.topbar-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--oat); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--brown); font-size: 18px; transition: background 0.15s;
+}
+.topbar-btn:active { background: var(--latte); }
+
+/* ── Bottom nav ── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px; z-index: 100;
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: stretch;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 10px 4px 8px;
+  cursor: pointer; border: none; background: none;
+  transition: color 0.15s;
+  color: var(--text-light); font-size: 10px; gap: 3px;
+}
+.nav-item .nav-icon { font-size: 20px; line-height: 1; }
+.nav-item.active { color: var(--brown); }
+.nav-item.active .nav-icon { color: var(--caramel); }
+.nav-add {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 6px 4px 8px; cursor: pointer; border: none; background: none; gap: 3px;
+}
+.nav-add-circle {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--caramel), var(--brown));
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 22px; box-shadow: 0 2px 8px rgba(120,80,50,0.3);
+  margin-top: -8px;
+}
+.nav-add span { font-size: 10px; color: var(--text-light); }
+
+/* ── Page container ── */
+.page { display: none; padding: 16px 16px 90px; }
+.page.active { display: block; }
+
+/* ── Section header ── */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px; padding: 0 4px;
+}
+.section-tag {
+  font-size: 11px; color: var(--text-light);
+  background: var(--oat); padding: 3px 10px; border-radius: 20px;
+}
+
+/* ── Status badge ── */
+.badge {
+  display: inline-block; font-size: 10px; font-weight: 500;
+  padding: 3px 9px; border-radius: 20px; white-space: nowrap;
+}
+.badge-waiting { background: var(--s-waiting-bg); color: var(--s-waiting-text); }
+.badge-drafting { background: var(--s-drafting-bg); color: var(--s-drafting-text); }
+.badge-draft-confirm { background: var(--s-draft-confirm-bg); color: #4A3A28; }
+.badge-coloring { background: var(--s-coloring-bg); color: var(--s-coloring-text); }
+.badge-color-confirm { background: var(--s-color-confirm-bg); color: #4A3820; }
+.badge-layout { background: var(--s-layout-bg); color: var(--s-layout-text); }
+.badge-producing { background: var(--s-producing-bg); color: var(--s-producing-text); }
+.badge-ready-ship { background: var(--s-ready-ship-bg); color: var(--s-ready-ship-text); }
+.badge-shipped { background: var(--s-shipped-bg); color: var(--s-shipped-text); }
+.badge-done { background: var(--s-done-bg); color: var(--s-done-text); }
+
+/* ── Order card ── */
+.order-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+  box-shadow: 0 1px 4px var(--shadow);
+}
+.order-card:active { transform: scale(0.985); box-shadow: none; }
+.order-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+.order-card-name { font-size: 15px; font-weight: 500; color: var(--dark-brown); }
+.order-card-ig { font-size: 11px; color: var(--text-light); margin-top: 1px; }
+.order-card-items { font-size: 12px; color: var(--text-mid); margin-bottom: 8px; }
+.order-card-dates { display: flex; gap: 12px; flex-wrap: wrap; }
+.date-chip {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 11px; color: var(--text-light);
+}
+.date-chip .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.dot-start { background: var(--caramel); }
+.dot-draft { background: var(--brown); }
+.dot-color { background: var(--apricot-text); }
+.dot-ship { background: var(--blue-text); }
+.overdue { color: #C05050; font-weight: 500; }
+.days-chip {
+  font-size: 11px; padding: 2px 8px; border-radius: 10px;
+  background: var(--latte); color: var(--brown); font-weight: 500;
+}
+.days-chip.urgent { background: #F5DADA; color: #C05050; }
+.days-chip.soon { background: #F5EDDA; color: #9A6010; }
+
+/* ── Wait area card ── */
+.wait-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--caramel);
+  border-radius: 0 12px 12px 0;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  box-shadow: 0 1px 4px var(--shadow);
+  transition: transform 0.1s;
+}
+.wait-card:active { transform: scale(0.985); }
+.wait-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.wait-card-name { font-size: 14px; font-weight: 500; color: var(--dark-brown); }
+.wait-info { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.wait-info-item { font-size: 11px; color: var(--text-light); }
+
+/* ── Kanban ── */
+.kanban-scroll { display: flex; flex-direction: column; gap: 14px; padding-bottom: 8px; margin: 0; }
+.kanban-col { width: 100%; }
+.kanban-col-header {
+  font-size: 12px; font-weight: 500;
+  padding: 6px 12px; border-radius: 10px 10px 0 0;
+  margin-bottom: 0;
+}
+.kanban-col-body { background: var(--oat); border-radius: 0 0 10px 10px; padding: 8px; min-height: 80px; }
+.kanban-mini-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 12px; margin-bottom: 7px;
+  cursor: pointer; transition: transform 0.1s;
+  box-shadow: 0 1px 3px var(--shadow);
+}
+.kanban-mini-card:active { transform: scale(0.97); }
+.kanban-mini-name { font-size: 13px; font-weight: 500; color: var(--dark-brown); }
+.kanban-mini-item { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+.kanban-mini-deadline { font-size: 10px; color: var(--text-light); margin-top: 5px; }
+
+/* ── Calendar ── */
+.cal-nav { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; margin-bottom: 12px; }
+.cal-nav-btn {
+  width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border);
+  background: var(--white); cursor: pointer; color: var(--brown); font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+}
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-dow { text-align: center; font-size: 10px; color: var(--text-light); padding: 4px 0; font-weight: 500; }
+.cal-day {
+  min-height: 78px; padding: 4px 3px; background: var(--white);
+  border: 1px solid var(--border); border-radius: 8px; cursor: pointer;
+  transition: background 0.1s;
+  overflow: hidden;
+}
+.cal-day:active { background: var(--oat); }
+.cal-day.other-month { opacity: 0.35; }
+.cal-day.today { border-color: var(--caramel); border-width: 1.5px; }
+.cal-day-num { font-size: 11px; color: var(--text-mid); font-weight: 500; text-align: right; padding-right: 2px; }
+.cal-dot-row { display: flex; flex-direction: column; gap: 2px; margin-top: 3px; }
+.cal-event-dot { width: 5px; height: 5px; border-radius: 50%; }
+.cal-event-label {
+  display: block;
+  width: 100%;
+  border-radius: 4px;
+  padding: 2px 3px;
+  font-size: 9px;
+  line-height: 1.2;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  font-weight: 500;
+}
+.cal-event-draft { background: #4A3728; }
+.cal-event-color { background: #D98BA3; }
+.cal-event-ship { background: #A84F3D; }
+
+/* ── Stats ── */
+.stat-section { margin-bottom: 20px; }
+.stat-month-label { font-family: 'Noto Serif TC', serif; font-size: 14px; color: var(--brown); margin-bottom: 10px; padding-left: 4px; }
+.stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.stat-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 14px;
+}
+.stat-label { font-size: 11px; color: var(--text-light); margin-bottom: 4px; }
+.stat-num { font-size: 22px; font-weight: 500; color: var(--dark-brown); }
+.stat-unit { font-size: 11px; color: var(--text-light); margin-left: 2px; }
+.stat-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.stat-bar-label { font-size: 12px; color: var(--text-mid); width: 40px; flex-shrink: 0; }
+.stat-bar-wrap { flex: 1; background: var(--oat); border-radius: 4px; height: 8px; overflow: hidden; }
+.stat-bar-fill { height: 100%; border-radius: 4px; background: var(--caramel); transition: width 0.4s ease; }
+.stat-bar-val { font-size: 12px; color: var(--text-mid); width: 24px; text-align: right; flex-shrink: 0; }
+
+/* ── Modal / Drawer ── */
+.overlay {
+  position: fixed; inset: 0; background: rgba(44,31,20,0.4);
+  z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.overlay.show { opacity: 1; pointer-events: all; }
+.drawer {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%);
+  width: 100%; max-width: 480px; z-index: 201;
+  background: var(--white); border-radius: 20px 20px 0 0;
+  max-height: 92vh; overflow-y: auto;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.drawer.show { transform: translateX(-50%) translateY(0); }
+.drawer-handle {
+  width: 36px; height: 4px; background: var(--sand);
+  border-radius: 2px; margin: 12px auto 0; cursor: pointer;
+}
+.drawer-header { padding: 12px 20px 14px; border-bottom: 1px solid var(--border); }
+.drawer-title { font-family: 'Noto Serif TC', serif; font-size: 16px; color: var(--dark-brown); }
+.drawer-body { padding: 16px 20px 24px; }
+
+/* ── Order detail ── */
+.detail-section { margin-bottom: 18px; }
+.detail-label { font-size: 11px; color: var(--text-light); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+.detail-value { font-size: 14px; color: var(--text-dark); line-height: 1.6; }
+.detail-timeline { display: flex; flex-direction: column; gap: 0; }
+.timeline-item {
+  display: flex; align-items: flex-start; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.timeline-item:last-child { border-bottom: none; }
+.timeline-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
+  border: 2px solid var(--border);
+}
+.timeline-dot.done { background: var(--s-done); border-color: var(--s-done); }
+.timeline-dot.active { background: var(--caramel); border-color: var(--caramel); }
+.timeline-dot.pending { background: transparent; border-color: var(--sand); }
+.timeline-label { font-size: 13px; color: var(--text-mid); flex: 1; }
+.timeline-date { font-size: 12px; color: var(--text-light); }
+
+/* ── Status stepper ── */
+.status-stepper { display: flex; flex-wrap: wrap; gap: 6px; }
+.status-step-btn {
+  font-size: 11px; padding: 5px 11px; border-radius: 20px;
+  border: 1px solid var(--border); background: var(--oat);
+  color: var(--text-mid); cursor: pointer; transition: all 0.15s;
+}
+.status-step-btn.active { color: white; border-color: transparent; }
+.status-step-btn.s-waiting.active { background: var(--s-waiting); }
+.status-step-btn.s-drafting.active { background: var(--s-drafting); }
+.status-step-btn.s-draft-confirm.active { background: var(--s-draft-confirm); }
+.status-step-btn.s-coloring.active { background: var(--s-coloring); }
+.status-step-btn.s-color-confirm.active { background: var(--s-color-confirm); }
+.status-step-btn.s-layout.active { background: var(--s-layout); }
+.status-step-btn.s-producing.active { background: var(--s-producing); }
+.status-step-btn.s-ready-ship.active { background: var(--s-ready-ship); }
+.status-step-btn.s-shipped.active { background: var(--s-shipped); }
+.status-step-btn.s-done.active { background: var(--s-done); }
+
+/* ── Form ── */
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 12px; color: var(--text-light); margin-bottom: 5px; display: block; }
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+  border-radius: 10px; font-size: 14px; font-family: 'Noto Sans TC', sans-serif;
+  background: var(--white); color: var(--text-dark);
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none; border-color: var(--caramel);
+}
+.form-textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-hint { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+
+/* Tags multi-select */
+.tag-group { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag-toggle {
+  font-size: 12px; padding: 5px 12px; border-radius: 20px;
+  border: 1px solid var(--border); background: var(--white);
+  color: var(--text-mid); cursor: pointer; transition: all 0.15s;
+  user-select: none;
+}
+.tag-toggle.selected { background: var(--caramel); border-color: var(--caramel); color: white; }
+
+/* Buttons */
+.btn-primary {
+  width: 100%; padding: 13px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--caramel), var(--brown));
+  color: white; border: none; font-size: 15px; font-weight: 500;
+  font-family: 'Noto Sans TC', sans-serif; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(120,80,50,0.25); transition: opacity 0.15s;
+}
+.btn-primary:active { opacity: 0.85; }
+.btn-secondary {
+  width: 100%; padding: 12px; border-radius: 12px;
+  background: var(--oat); color: var(--brown);
+  border: 1px solid var(--border); font-size: 14px;
+  font-family: 'Noto Sans TC', sans-serif; cursor: pointer; transition: background 0.15s;
+}
+.btn-secondary:active { background: var(--latte); }
+.btn-danger {
+  width: 100%; padding: 11px; border-radius: 12px;
+  background: #FEF2F2; color: #B91C1C;
+  border: 1px solid #FECACA; font-size: 14px;
+  font-family: 'Noto Sans TC', sans-serif; cursor: pointer;
+}
+.btn-row { display: flex; gap: 10px; }
+.btn-row .btn-secondary, .btn-row .btn-primary { flex: 1; }
+
+/* Empty state */
+.empty-state { text-align: center; padding: 48px 20px; }
+.empty-icon { font-size: 40px; margin-bottom: 12px; }
+.empty-title { font-size: 15px; color: var(--text-mid); margin-bottom: 6px; }
+.empty-sub { font-size: 13px; color: var(--text-light); }
+
+/* Divider */
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+.divider-text {
+  text-align: center; font-size: 11px; color: var(--text-light);
+  margin: 16px 0; position: relative;
+}
+.divider-text::before, .divider-text::after {
+  content: ''; position: absolute; top: 50%; width: 30%; height: 1px; background: var(--border);
+}
+.divider-text::before { left: 0; }
+.divider-text::after { right: 0; }
+
+/* Notification */
+.toast {
+  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--dark-brown); color: white; padding: 10px 20px;
+  border-radius: 20px; font-size: 13px; z-index: 300;
+  opacity: 0; transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+
+/* Photo upload */
+.photo-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.photo-thumb {
+  width: 72px; height: 72px; border-radius: 10px; object-fit: cover;
+  border: 1px solid var(--border); cursor: pointer;
+}
+.photo-add {
+  width: 72px; height: 72px; border-radius: 10px;
+  border: 1.5px dashed var(--sand); background: var(--oat);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-light); font-size: 22px;
+}
+.photo-item { position: relative; width: 72px; height: 72px; }
+.photo-remove {
+  position: absolute; top: -6px; right: -6px;
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 1px solid var(--white); background: var(--dark-brown); color: white;
+  font-size: 12px; line-height: 20px; text-align: center; cursor: pointer;
+  box-shadow: 0 1px 4px var(--shadow);
+}
+.photo-hint { font-size: 11px; color: var(--text-light); margin-top: 6px; line-height: 1.5; }
+
+/* Confirm dialog */
+.confirm-modal {
+  position: fixed; inset: 0; background: rgba(44,31,20,0.5);
+  z-index: 300; display: none; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.confirm-modal.show { display: flex; }
+.confirm-box {
+  background: var(--white); border-radius: 16px; padding: 24px 20px;
+  width: 100%; max-width: 300px;
+}
+.confirm-title { font-size: 16px; font-weight: 500; color: var(--dark-brown); margin-bottom: 8px; }
+.confirm-msg { font-size: 13px; color: var(--text-mid); margin-bottom: 20px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div>
+    <div class="topbar-title">✦ Pawfect Studio Planner</div>
+    <div class="topbar-subtitle" id="topbar-date"></div>
+  </div>
+  <button class="topbar-btn" onclick="openSearch()">🔍</button>
+</div>
+
+<!-- Pages -->
+<div class="page active" id="page-wait">
+  <div class="section-header">
+    <h2>排隊等待區</h2>
+    <div class="section-tag" id="wait-count">0 筆等待中</div>
+  </div>
+  <div id="wait-list"></div>
+</div>
+
+<div class="page" id="page-board">
+  <div class="section-header">
+    <h2>繪製看板</h2>
+  </div>
+  <div class="kanban-scroll" id="kanban-board"></div>
+</div>
+
+<div class="page" id="page-calendar">
+  <div class="cal-nav">
+    <button class="cal-nav-btn" onclick="calPrev()">‹</button>
+    <div>
+      <h2 id="cal-month-label" style="text-align:center"></h2>
+    </div>
+    <button class="cal-nav-btn" onclick="calNext()">›</button>
+  </div>
+  <div class="cal-grid" id="cal-grid"></div>
+  <div style="margin-top:16px">
+    <div style="font-size:11px;color:var(--text-light);margin-bottom:8px;padding:0 4px">點擊日期查看當天訂單</div>
+    <div id="cal-day-orders"></div>
+  </div>
+  <!-- Legend -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;padding:12px 4px 0;margin-top:8px">
+    <div class="date-chip"><div class="dot" style="background:#4A3728"></div> 草稿期限</div>
+    <div class="date-chip"><div class="dot" style="background:#D98BA3"></div> 上色期限</div>
+    <div class="date-chip"><div class="dot" style="background:#A84F3D"></div> 寄出期限</div>
+  </div>
+</div>
+
+<div class="page" id="page-stats">
+  <div class="section-header">
+    <h2>繪製統計</h2>
+  </div>
+  <div id="stats-content"></div>
+</div>
+
+<!-- Bottom nav -->
+<nav class="bottom-nav">
+  <button class="nav-item active" onclick="switchPage('wait',this)">
+    <span class="nav-icon">⏳</span>
+    <span>排隊</span>
+  </button>
+  <button class="nav-item" onclick="switchPage('board',this)">
+    <span class="nav-icon">📋</span>
+    <span>看板</span>
+  </button>
+  <button class="nav-add" onclick="openNewOrder()">
+    <div class="nav-add-circle">＋</div>
+    <span>新增</span>
+  </button>
+  <button class="nav-item" onclick="switchPage('calendar',this)">
+    <span class="nav-icon">📅</span>
+    <span>月曆</span>
+  </button>
+  <button class="nav-item" onclick="switchPage('stats',this)">
+    <span class="nav-icon">📊</span>
+    <span>統計</span>
+  </button>
+</nav>
+
+<!-- Order Detail Drawer -->
+<div class="overlay" id="detail-overlay" onclick="closeDetail()"></div>
+<div class="drawer" id="detail-drawer">
+  <div class="drawer-handle" onclick="closeDetail()"></div>
+  <div class="drawer-header">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="drawer-title" id="detail-title">訂單詳情</div>
+      <div id="detail-badge"></div>
+    </div>
+  </div>
+  <div class="drawer-body" id="detail-body"></div>
+</div>
+
+<!-- New/Edit Order Drawer -->
+<div class="overlay" id="form-overlay" onclick="closeForm()"></div>
+<div class="drawer" id="form-drawer">
+  <div class="drawer-handle" onclick="closeForm()"></div>
+  <div class="drawer-header">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="drawer-title" id="form-title">新增訂單</div>
+      <button onclick="closeForm()" style="border:none;background:none;font-size:20px;color:var(--text-light);cursor:pointer;padding:4px">✕</button>
+    </div>
+  </div>
+  <div class="drawer-body">
+    <form id="order-form" onsubmit="saveOrder(event)">
+      <div class="divider-text">客人資訊</div>
+      <div class="form-group">
+        <label class="form-label">LINE 名稱 / 客人暱稱 *</label>
+        <input class="form-input" id="f-name" required placeholder="例如：@line_name 或 小花">
+        <div class="form-hint">為了保護個資，請不要填寫客人本名。</div>
+      </div>
+
+      <div class="divider-text">委託繪製項目</div>
+      <div class="form-group">
+        <div class="tag-group" id="draw-tags">
+          <div class="tag-toggle" onclick="toggleTag(this,'大頭')">大頭</div>
+          <div class="tag-toggle" onclick="toggleTag(this,'半身')">半身</div>
+          <div class="tag-toggle" onclick="toggleTag(this,'全身')">全身</div>
+          <div class="tag-toggle" onclick="toggleTag(this,'手掌')">手掌</div>
+          <div class="tag-toggle" onclick="toggleTag(this,'特殊圖')">特殊圖</div>
+        </div>
+      </div>
+
+      <div class="divider-text">客製化產品</div>
+      <div class="form-group">
+        <div class="tag-group" id="product-tags">
+          <div class="tag-toggle" onclick="toggleTag(this,'法蘭絨毛毯')">法蘭絨毛毯</div>
+          <div class="tag-toggle" onclick="toggleTag(this,'造型抱枕')">造型抱枕</div>
+          <div class="tag-toggle" onclick="toggleTag(this,'鑰匙圈')">鑰匙圈</div>
+          <div class="tag-toggle" onclick="toggleTag(this,'小抱枕鑰匙圈')">小抱枕鑰匙圈</div>
+          <div class="tag-toggle" onclick="toggleTag(this,'帆布提袋')">帆布提袋</div>
+          <div class="tag-toggle" onclick="toggleTag(this,'T恤')">T恤</div>
+          <div class="tag-toggle" onclick="toggleTag(this,'無框畫')">無框畫</div>
+          <div class="tag-toggle" onclick="toggleTag(this,'防水貼紙')">防水貼紙</div>
+          <div class="tag-toggle" onclick="toggleTag(this,'磁吸手機支架')">磁吸手機支架</div>
+          <div class="tag-toggle" onclick="toggleTag(this,'地墊')">地墊</div>
+          <div class="tag-toggle" onclick="toggleTag(this,'飲料提袋')">飲料提袋</div>
+          <div class="tag-toggle" onclick="toggleTag(this,'手機殼')">手機殼</div>
+        </div>
+      </div>
+
+      <div class="divider-text">付款資訊</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">已付金額</label>
+          <input class="form-input" id="f-paid" type="number" placeholder="2500">
+        </div>
+        <div class="form-group">
+          <label class="form-label">付款日期</label>
+          <input class="form-input" id="f-paid-date" type="date">
+        </div>
+      </div>
+
+      <div class="divider-text">繪製時間軸</div>
+      <div class="form-group">
+        <label class="form-label">⭐ 預計開始繪製日期 *</label>
+        <input class="form-input" id="f-start" type="date" required onchange="autoFillDates()">
+        <div class="form-hint">輸入後自動推算草稿 (+2天) 和上色期限 (+5天)</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">草稿期限</label>
+          <input class="form-input" id="f-draft" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">上色期限</label>
+          <input class="form-input" id="f-color" type="date">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">產品製作期限</label>
+          <input class="form-input" id="f-product" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">寄出期限</label>
+          <input class="form-input" id="f-ship" type="date">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">備註</label>
+        <textarea class="form-textarea" id="f-notes" placeholder="客人的特殊需求、風格備注..."></textarea>
+      </div>
+
+      <div class="divider-text">寵物照片</div>
+      <div class="form-group">
+        <div class="photo-grid" id="form-photo-grid"></div>
+        <label class="photo-add" style="margin-top:8px" for="f-photos">＋</label>
+        <input id="f-photos" type="file" accept="image/*" multiple style="display:none" onchange="handleFormPhotoUpload(this)">
+        <div class="photo-hint">只上傳寵物照片，請避免放入含有人臉、地址、電話或其他個資的截圖。此版本照片存在本機瀏覽器；兩人同步需接 Firebase 登入與 Storage 權限。</div>
+      </div>
+
+      <div style="margin-top:8px">
+        <button type="submit" class="btn-primary">💾 儲存訂單</button>
+      </div>
+      <div style="margin-top:8px" id="delete-btn-wrap"></div>
+    </form>
+  </div>
+</div>
+
+<!-- Confirm dialog -->
+<div class="confirm-modal" id="confirm-modal">
+  <div class="confirm-box">
+    <div class="confirm-title" id="confirm-title">確認刪除</div>
+    <div class="confirm-msg" id="confirm-msg">此操作無法復原，確定要刪除嗎？</div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="closeConfirm()">取消</button>
+      <button class="btn-danger" id="confirm-ok-btn">刪除</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Data ──────────────────────────────────────────────
+const STATUS_LABELS = {
+  waiting: '排隊中', drafting: '草稿中', draft_confirm: '等待草稿確認',
+  coloring: '上色中', color_confirm: '等待成品確認', layout: '產品排版中',
+  producing: '產品製作中', ready_ship: '待寄出', shipped: '已寄出', done: '已結單'
+};
+const STATUS_KEYS = Object.keys(STATUS_LABELS);
+const STATUS_CSS = {
+  waiting: 'waiting', drafting: 'drafting', draft_confirm: 'draft-confirm',
+  coloring: 'coloring', color_confirm: 'color-confirm', layout: 'layout',
+  producing: 'producing', ready_ship: 'ready-ship', shipped: 'shipped', done: 'done'
+};
+
+let orders = JSON.parse(localStorage.getItem('pawfectOrders') || '[]');
+let editingId = null;
+let calYear, calMonth;
+const today = new Date(); today.setHours(0,0,0,0);
+calYear = today.getFullYear(); calMonth = today.getMonth();
+
+function saveData() { localStorage.setItem('pawfectOrders', JSON.stringify(orders)); }
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function dateStr(d) {
+  if (!d) return '';
+  if (typeof d === 'string') d = new Date(d);
+  return d.toLocaleDateString('zh-TW', {month:'numeric', day:'numeric'});
+}
+function addDays(dateStr, n) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr); d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0,10);
+}
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr); d.setHours(0,0,0,0);
+  return Math.ceil((d - today) / 86400000);
+}
+function isOverdue(dateStr) {
+  if (!dateStr) return false;
+  return daysUntil(dateStr) < 0;
+}
+
+// ── Topbar date ────────────────────────────────────────
+document.getElementById('topbar-date').textContent =
+  today.toLocaleDateString('zh-TW', {year:'numeric', month:'long', day:'numeric', weekday:'long'});
+
+// ── Page switch ────────────────────────────────────────
+function switchPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  renderPage(name);
+}
+function renderPage(name) {
+  if (name === 'wait') renderWait();
+  if (name === 'board') renderBoard();
+  if (name === 'calendar') renderCalendar();
+  if (name === 'stats') renderStats();
+}
+renderPage('wait');
+
+// ── Wait list ──────────────────────────────────────────
+function renderWait() {
+  const waiting = orders.filter(o => o.status === 'waiting' || (!o.status)).sort((a,b) => (a.startDate||'').localeCompare(b.startDate||''));
+  const active = orders.filter(o => o.status && o.status !== 'waiting' && o.status !== 'done').sort((a,b) => (a.startDate||'').localeCompare(b.startDate||''));
+
+  document.getElementById('wait-count').textContent = `${waiting.length} 筆等待中`;
+  let html = '';
+
+  if (waiting.length === 0 && active.length === 0) {
+    html = `<div class="empty-state"><div class="empty-icon">🌸</div><div class="empty-title">目前沒有等待中的訂單</div><div class="empty-sub">點擊底部「＋」新增第一筆訂單</div></div>`;
+  }
+
+  if (waiting.length > 0) {
+    html += `<div style="font-size:12px;color:var(--text-light);padding:0 4px;margin-bottom:8px">— 尚未開始繪製 —</div>`;
+    waiting.forEach(o => { html += waitCard(o); });
+  }
+  if (active.length > 0) {
+    html += `<div style="font-size:12px;color:var(--text-light);padding:0 4px;margin:12px 0 8px">— 繪製進行中 —</div>`;
+    active.forEach(o => { html += orderCard(o); });
+  }
+  document.getElementById('wait-list').innerHTML = html;
+}
+
+function waitCard(o) {
+  const days = daysUntil(o.startDate);
+  let daysHtml = '';
+  if (days !== null) {
+    if (days < 0) daysHtml = `<span class="days-chip urgent">已逾期 ${Math.abs(days)} 天</span>`;
+    else if (days === 0) daysHtml = `<span class="days-chip urgent">今天開始！</span>`;
+    else if (days <= 3) daysHtml = `<span class="days-chip soon">還有 ${days} 天</span>`;
+    else daysHtml = `<span class="days-chip">還有 ${days} 天</span>`;
+  }
+  const items = [...(o.drawItems||[]), ...(o.products||[])].join('・');
+  return `<div class="wait-card" onclick="openDetail('${o.id}')">
+    <div class="wait-card-header">
+      <div>
+        <div class="wait-card-name">${o.clientName}</div>
+      </div>
+      ${daysHtml}
+    </div>
+    <div style="font-size:12px;color:var(--text-mid);margin-bottom:6px">${items || '（未設定項目）'}</div>
+    <div class="wait-info">
+      ${o.startDate ? `<div class="date-chip"><div class="dot dot-start"></div>${dateStr(o.startDate)} 開始</div>` : ''}
+      ${o.draftDeadline ? `<div class="date-chip"><div class="dot dot-draft"></div>草稿 ${dateStr(o.draftDeadline)}</div>` : ''}
+      ${o.colorDeadline ? `<div class="date-chip"><div class="dot dot-color"></div>上色 ${dateStr(o.colorDeadline)}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function orderCard(o) {
+  const items = [...(o.drawItems||[]), ...(o.products||[])].join('・');
+  const days = daysUntil(o.colorDeadline || o.draftDeadline || o.shipDeadline);
+  let daysHtml = '';
+  if (days !== null) {
+    if (days < 0) daysHtml = `<span class="days-chip urgent">逾期 ${Math.abs(days)} 天</span>`;
+    else if (days <= 2) daysHtml = `<span class="days-chip soon">還有 ${days} 天</span>`;
+  }
+  return `<div class="order-card" onclick="openDetail('${o.id}')">
+    <div class="order-card-header">
+      <div>
+        <div class="order-card-name">${o.clientName}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <span class="badge badge-${STATUS_CSS[o.status]}">${STATUS_LABELS[o.status]}</span>
+        ${daysHtml}
+      </div>
+    </div>
+    <div class="order-card-items">${items}</div>
+    <div class="order-card-dates">
+      ${o.draftDeadline ? `<div class="date-chip ${isOverdue(o.draftDeadline)?'overdue':''}"><div class="dot dot-draft"></div>草稿 ${dateStr(o.draftDeadline)}</div>` : ''}
+      ${o.colorDeadline ? `<div class="date-chip ${isOverdue(o.colorDeadline)?'overdue':''}"><div class="dot dot-color"></div>上色 ${dateStr(o.colorDeadline)}</div>` : ''}
+      ${o.shipDeadline ? `<div class="date-chip ${isOverdue(o.shipDeadline)?'overdue':''}"><div class="dot dot-ship"></div>寄出 ${dateStr(o.shipDeadline)}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+// ── Kanban ─────────────────────────────────────────────
+function renderBoard() {
+  const cols = [
+    { key: 'waiting', label: '排隊中', bg: 'var(--s-waiting-bg)', text: 'var(--s-waiting-text)' },
+    { key: 'drafting', label: '草稿中', bg: 'var(--s-drafting-bg)', text: 'var(--s-drafting-text)' },
+    { key: 'draft_confirm', label: '等待確認草稿', bg: 'var(--s-draft-confirm-bg)', text: '#4A3A28' },
+    { key: 'coloring', label: '上色中', bg: 'var(--s-coloring-bg)', text: 'var(--s-coloring-text)' },
+    { key: 'color_confirm', label: '等待確認成品', bg: 'var(--s-color-confirm-bg)', text: '#4A3820' },
+    { key: 'layout', label: '產品排版中', bg: 'var(--s-layout-bg)', text: 'var(--s-layout-text)' },
+    { key: 'producing', label: '產品製作中', bg: 'var(--s-producing-bg)', text: 'var(--s-producing-text)' },
+    { key: 'ready_ship', label: '待寄出', bg: 'var(--s-ready-ship-bg)', text: 'var(--s-ready-ship-text)' },
+    { key: 'shipped', label: '已寄出', bg: 'var(--s-shipped-bg)', text: 'var(--s-shipped-text)' },
+    { key: 'done', label: '已結單', bg: 'var(--s-done-bg)', text: 'var(--s-done-text)' },
+  ];
+  let html = '';
+  cols.forEach(col => {
+    const colOrders = orders.filter(o => o.status === col.key);
+    let cards = '';
+    if (colOrders.length === 0) {
+      cards = `<div style="font-size:11px;color:var(--text-light);text-align:center;padding:12px 0">目前沒有訂單</div>`;
+    } else {
+      colOrders.forEach(o => {
+        const items = [...(o.drawItems||[])].slice(0,2).join('・');
+        const deadline = o.colorDeadline || o.draftDeadline || o.shipDeadline;
+        const overdue = deadline && isOverdue(deadline);
+        cards += `<div class="kanban-mini-card" onclick="openDetail('${o.id}')">
+          <div class="kanban-mini-name">${o.clientName}</div>
+          <div class="kanban-mini-item">${items}</div>
+          ${deadline ? `<div class="kanban-mini-deadline ${overdue?'overdue':''}">${overdue?'⚠ 已逾期 · ':''}${dateStr(deadline)}</div>` : ''}
+        </div>`;
+      });
+    }
+    html += `<div class="kanban-col">
+      <div class="kanban-col-header" style="background:${col.bg};color:${col.text}">${col.label} <span style="opacity:0.7">${colOrders.length}</span></div>
+      <div class="kanban-col-body">${cards}</div>
+    </div>`;
+  });
+  document.getElementById('kanban-board').innerHTML = html;
+}
+
+// ── Calendar ───────────────────────────────────────────
+function renderCalendar() {
+  const label = new Date(calYear, calMonth, 1).toLocaleDateString('zh-TW', {year:'numeric', month:'long'});
+  document.getElementById('cal-month-label').textContent = label;
+
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const prevDays = new Date(calYear, calMonth, 0).getDate();
+  const dows = ['日','一','二','三','四','五','六'];
+
+  // Build event map: only show draft / color / ship as TimeTree-style name labels
+  const eventMap = {};
+  orders.forEach(o => {
+    const mark = (d, type, label) => {
+      if (!d) return;
+      const key = d.slice(0,10);
+      if (!eventMap[key]) eventMap[key] = [];
+      eventMap[key].push({ type, label, name: o.clientName, id: o.id });
+    };
+    mark(o.draftDeadline, 'draft', '草稿');
+    mark(o.colorDeadline, 'color', '上色');
+    mark(o.shipDeadline, 'ship', '寄出');
+  });
+
+  let html = dows.map(d => `<div class="cal-dow">${d}</div>`).join('');
+
+  // Prev month days
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const day = prevDays - i;
+    html += `<div class="cal-day other-month"><div class="cal-day-num">${day}</div></div>`;
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateKey = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = today.getFullYear()===calYear && today.getMonth()===calMonth && today.getDate()===d;
+    const events = eventMap[dateKey] || [];
+    let dots = '';
+    if (events.length) {
+      dots = `<div class="cal-dot-row">${events.slice(0,3).map(e=>`<div class="cal-event-label cal-event-${e.type}">${e.name}｜${e.label}</div>`).join('')}${events.length>3 ? `<div class="cal-event-label" style="background:var(--sand);color:var(--dark-brown)">+${events.length-3}</div>` : ''}</div>`;
+    }
+    html += `<div class="cal-day${isToday?' today':''}" onclick="showCalDay('${dateKey}')">
+      <div class="cal-day-num">${d}</div>
+      ${dots}
+    </div>`;
+  }
+
+  // Next month
+  const total = firstDay + daysInMonth;
+  const remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
+  for (let d = 1; d <= remaining; d++) {
+    html += `<div class="cal-day other-month"><div class="cal-day-num">${d}</div></div>`;
+  }
+
+  document.getElementById('cal-grid').innerHTML = html;
+  document.getElementById('cal-day-orders').innerHTML = '';
+}
+
+function showCalDay(dateKey) {
+  const label = new Date(dateKey).toLocaleDateString('zh-TW', {month:'long', day:'numeric', weekday:'short'});
+  const matches = [];
+  orders.forEach(o => {
+    const tags = [];
+    if (o.draftDeadline && o.draftDeadline.slice(0,10)===dateKey) tags.push('草稿期限');
+    if (o.colorDeadline && o.colorDeadline.slice(0,10)===dateKey) tags.push('上色期限');
+    if (o.shipDeadline && o.shipDeadline.slice(0,10)===dateKey) tags.push('寄出期限');
+    if (tags.length) matches.push({ o, tags });
+  });
+  if (!matches.length) {
+    document.getElementById('cal-day-orders').innerHTML =
+      `<div style="font-size:13px;color:var(--text-light);text-align:center;padding:16px">${label}・沒有排程事件</div>`;
+    return;
+  }
+  let html = `<div style="font-size:12px;color:var(--text-mid);margin-bottom:8px;padding:0 4px">${label}</div>`;
+  matches.forEach(({ o, tags }) => {
+    const items = [...(o.drawItems||[])].join('・');
+    html += `<div class="order-card" onclick="openDetail('${o.id}')">
+      <div class="order-card-header">
+        <div><div class="order-card-name">${o.clientName}</div>
+        <div class="order-card-ig">${items}</div></div>
+        <span class="badge badge-${STATUS_CSS[o.status]||'waiting'}">${STATUS_LABELS[o.status]||'排隊中'}</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${tags.map(t=>`<span style="font-size:11px;background:var(--oat);color:var(--text-mid);padding:2px 8px;border-radius:8px">${t}</span>`).join('')}</div>
+    </div>`;
+  });
+  document.getElementById('cal-day-orders').innerHTML = html;
+}
+
+function calPrev() { calMonth--; if (calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+function calNext() { calMonth++; if (calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+
+// ── Stats ──────────────────────────────────────────────
+function renderStats() {
+  const DRAW_TYPES = ['大頭','半身','全身','手掌','特殊圖'];
+
+  // Group completed orders by month (completedDate or done status)
+  const byMonth = {};
+  orders.forEach(o => {
+    const key = o.completedDate ? o.completedDate.slice(0,7) :
+                (o.status === 'done' && o.shipDeadline ? o.shipDeadline.slice(0,7) : null);
+    if (!key) return;
+    if (!byMonth[key]) byMonth[key] = { orders:[], total:0, draw:{} };
+    byMonth[key].orders.push(o);
+    byMonth[key].total++;
+    (o.drawItems||[]).forEach(item => {
+      byMonth[key].draw[item] = (byMonth[key].draw[item]||0) + 1;
+    });
+  });
+
+  // Ongoing
+  const ongoing = orders.filter(o => o.status && o.status !== 'done').length;
+
+  if (Object.keys(byMonth).length === 0 && ongoing === 0) {
+    document.getElementById('stats-content').innerHTML =
+      `<div class="empty-state"><div class="empty-icon">📈</div><div class="empty-title">尚無統計資料</div><div class="empty-sub">完成訂單後，這裡會顯示每月繪製統計</div></div>`;
+    return;
+  }
+
+  let html = '';
+
+  // Ongoing summary
+  html += `<div class="stat-grid" style="margin-bottom:20px">
+    <div class="stat-card">
+      <div class="stat-label">進行中訂單</div>
+      <div class="stat-num">${orders.filter(o=>o.status&&o.status!=='done'&&o.status!=='waiting').length}<span class="stat-unit">筆</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">排隊等待中</div>
+      <div class="stat-num">${orders.filter(o=>!o.status||o.status==='waiting').length}<span class="stat-unit">筆</span></div>
+    </div>
+  </div>`;
+
+  // Monthly breakdown
+  const months = Object.keys(byMonth).sort().reverse();
+  months.forEach(m => {
+    const data = byMonth[m];
+    const mLabel = new Date(m+'-01').toLocaleDateString('zh-TW', {year:'numeric', month:'long'});
+    const maxVal = Math.max(...DRAW_TYPES.map(t => data.draw[t]||0), 1);
+    html += `<div class="stat-section">
+      <div class="stat-month-label">${mLabel}</div>
+      <div class="stat-grid" style="margin-bottom:12px">
+        <div class="stat-card">
+          <div class="stat-label">完成訂單</div>
+          <div class="stat-num">${data.total}<span class="stat-unit">筆</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">繪製總件數</div>
+          <div class="stat-num">${Object.values(data.draw).reduce((a,b)=>a+b,0)}<span class="stat-unit">件</span></div>
+        </div>
+      </div>
+      ${DRAW_TYPES.map(t => data.draw[t] ? `
+        <div class="stat-bar-row">
+          <div class="stat-bar-label">${t}</div>
+          <div class="stat-bar-wrap"><div class="stat-bar-fill" style="width:${(data.draw[t]/maxVal*100).toFixed(0)}%"></div></div>
+          <div class="stat-bar-val">${data.draw[t]}</div>
+        </div>` : '').join('')}
+    </div>`;
+  });
+
+  document.getElementById('stats-content').innerHTML = html;
+}
+
+// ── Order Detail ───────────────────────────────────────
+function openDetail(id) {
+  const o = orders.find(x => x.id === id);
+  if (!o) return;
+  document.getElementById('detail-title').textContent = o.clientName;
+  document.getElementById('detail-badge').innerHTML =
+    `<span class="badge badge-${STATUS_CSS[o.status]||'waiting'}">${STATUS_LABELS[o.status]||'排隊中'}</span>`;
+
+  const items = [...(o.drawItems||[]), ...(o.products||[])];
+
+  let body = `
+  <div class="detail-section">
+    <div class="detail-label">LINE 名稱 / 客人暱稱</div>
+    <div class="detail-value">${o.clientName}</div>
+  </div>`;
+
+  if (items.length) {
+    body += `<div class="detail-section">
+      <div class="detail-label">委託內容</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+        ${items.map(i=>`<span style="font-size:12px;background:var(--oat);color:var(--text-mid);padding:3px 10px;border-radius:12px">${i}</span>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  if (o.paidAmount || o.paidDate) {
+    body += `<div class="detail-section">
+      <div class="detail-label">付款資訊</div>
+      <div class="detail-value">${o.paidAmount ? 'NT$ '+Number(o.paidAmount).toLocaleString() : ''} ${o.paidDate ? '· '+dateStr(o.paidDate) : ''}</div>
+    </div>`;
+  }
+
+  body += `<div class="detail-section">
+    <div class="detail-label">時間軸</div>
+    <div class="detail-timeline">
+      ${timelineItem('付款日期', o.paidDate, 'done')}
+      ${timelineItem('預計開始繪製', o.startDate, o.status==='waiting'?'active':'done', true)}
+      ${timelineItem('草稿期限', o.draftDeadline, ['drafting','draft_confirm'].includes(o.status)?'active':(['coloring','color_confirm','layout','producing','ready_ship','shipped','done'].includes(o.status)?'done':'pending'))}
+      ${timelineItem('上色期限', o.colorDeadline, ['coloring','color_confirm'].includes(o.status)?'active':(['layout','producing','ready_ship','shipped','done'].includes(o.status)?'done':'pending'))}
+      ${timelineItem('產品製作期限', o.productDeadline, ['layout','producing'].includes(o.status)?'active':(['ready_ship','shipped','done'].includes(o.status)?'done':'pending'))}
+      ${timelineItem('寄出期限', o.shipDeadline, o.status==='ready_ship'?'active':(o.status==='shipped'||o.status==='done'?'done':'pending'))}
+      ${timelineItem('實際寄出', o.actualShipDate, o.actualShipDate?'done':'pending')}
+      ${timelineItem('結單日期', o.completedDate, o.completedDate?'done':'pending')}
+    </div>
+  </div>`;
+
+  if (o.notes) {
+    body += `<div class="detail-section">
+      <div class="detail-label">備註</div>
+      <div class="detail-value" style="white-space:pre-line">${o.notes}</div>
+    </div>`;
+  }
+
+  body += `<div class="detail-section">
+    <div class="detail-label">寵物照片</div>
+    <div class="photo-grid">
+      ${renderPhotoItems(o.photos || [], id, 'detail')}
+      <label class="photo-add" for="detail-photo-${id}">＋</label>
+      <input id="detail-photo-${id}" type="file" accept="image/*" multiple style="display:none" onchange="addDetailPhotos('${id}', this)">
+    </div>
+    <div class="photo-hint">可上傳寵物參考照片，點照片可開新頁查看。</div>
+  </div>`;
+
+  // Status changer
+  body += `<div class="detail-section">
+    <div class="detail-label">更新狀態</div>
+    <div class="status-stepper">
+      ${STATUS_KEYS.map(k=>`<button type="button" class="status-step-btn s-${STATUS_CSS[k]}${o.status===k?' active':''}" onclick="updateStatus('${id}','${k}')">${STATUS_LABELS[k]}</button>`).join('')}
+    </div>
+  </div>`;
+
+  // Action buttons
+  body += `<div class="divider"></div>
+  <div class="btn-row">
+    <button class="btn-secondary" onclick="closeDetail();openEdit('${id}')">✏️ 編輯</button>
+    <button class="btn-danger" onclick="confirmDelete('${id}')">🗑 刪除</button>
+  </div>`;
+
+  document.getElementById('detail-body').innerHTML = body;
+  document.getElementById('detail-overlay').classList.add('show');
+  document.getElementById('detail-drawer').classList.add('show');
+}
+
+function timelineItem(label, date, state, bold=false) {
+  return `<div class="timeline-item">
+    <div class="timeline-dot ${state}"></div>
+    <div class="timeline-label" style="${bold?'font-weight:500':''}">${label}</div>
+    <div class="timeline-date">${date ? dateStr(date) : '—'}</div>
+  </div>`;
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('show');
+  document.getElementById('detail-drawer').classList.remove('show');
+}
+
+function updateStatus(id, status) {
+  const o = orders.find(x=>x.id===id);
+  if (!o) return;
+  o.status = status;
+  if (status==='done' && !o.completedDate) o.completedDate = new Date().toISOString().slice(0,10);
+  if (status==='shipped' && !o.actualShipDate) o.actualShipDate = new Date().toISOString().slice(0,10);
+  saveData();
+  openDetail(id);
+  renderPage(getCurrentPage());
+  showToast(`已更新為「${STATUS_LABELS[status]}」`);
+}
+
+// ── Form ───────────────────────────────────────────────
+function openNewOrder() {
+  editingId = null;
+  document.getElementById('form-title').textContent = '新增訂單';
+  document.getElementById('order-form').reset();
+  formPhotos = [];
+  renderFormPhotos();
+  document.querySelectorAll('.tag-toggle').forEach(t => t.classList.remove('selected'));
+  document.getElementById('delete-btn-wrap').innerHTML = '';
+  document.getElementById('form-overlay').classList.add('show');
+  document.getElementById('form-drawer').classList.add('show');
+}
+
+function openEdit(id) {
+  const o = orders.find(x=>x.id===id);
+  if (!o) return;
+  editingId = id;
+  document.getElementById('form-title').textContent = '編輯訂單';
+
+  document.getElementById('f-name').value = o.clientName||'';
+  document.getElementById('f-paid').value = o.paidAmount||'';
+  document.getElementById('f-paid-date').value = o.paidDate||'';
+  document.getElementById('f-start').value = o.startDate||'';
+  document.getElementById('f-draft').value = o.draftDeadline||'';
+  document.getElementById('f-color').value = o.colorDeadline||'';
+  document.getElementById('f-product').value = o.productDeadline||'';
+  document.getElementById('f-ship').value = o.shipDeadline||'';
+  document.getElementById('f-notes').value = o.notes||'';
+  formPhotos = [...(o.photos || [])];
+  renderFormPhotos();
+
+  document.querySelectorAll('#draw-tags .tag-toggle').forEach(t => {
+    t.classList.toggle('selected', (o.drawItems||[]).includes(t.textContent));
+  });
+  document.querySelectorAll('#product-tags .tag-toggle').forEach(t => {
+    t.classList.toggle('selected', (o.products||[]).includes(t.textContent));
+  });
+
+  document.getElementById('delete-btn-wrap').innerHTML =
+    `<button type="button" class="btn-danger" onclick="confirmDelete('${id}')">🗑 刪除此訂單</button>`;
+
+  document.getElementById('form-overlay').classList.add('show');
+  document.getElementById('form-drawer').classList.add('show');
+}
+
+function closeForm() {
+  document.getElementById('form-overlay').classList.remove('show');
+  document.getElementById('form-drawer').classList.remove('show');
+}
+
+function toggleTag(el, val) { el.classList.toggle('selected'); }
+
+function autoFillDates() {
+  const start = document.getElementById('f-start').value;
+  if (!start) return;
+  if (!document.getElementById('f-draft').value)
+    document.getElementById('f-draft').value = addDays(start, 2);
+  if (!document.getElementById('f-color').value)
+    document.getElementById('f-color').value = addDays(start, 7);
+}
+
+function saveOrder(e) {
+  e.preventDefault();
+  const drawItems = [...document.querySelectorAll('#draw-tags .tag-toggle.selected')].map(t=>t.textContent);
+  const products = [...document.querySelectorAll('#product-tags .tag-toggle.selected')].map(t=>t.textContent);
+
+  const data = {
+    clientName: document.getElementById('f-name').value.trim(),
+    drawItems, products,
+    paidAmount: document.getElementById('f-paid').value,
+    paidDate: document.getElementById('f-paid-date').value,
+    startDate: document.getElementById('f-start').value,
+    draftDeadline: document.getElementById('f-draft').value,
+    colorDeadline: document.getElementById('f-color').value,
+    productDeadline: document.getElementById('f-product').value,
+    shipDeadline: document.getElementById('f-ship').value,
+    notes: document.getElementById('f-notes').value.trim(),
+    photos: formPhotos,
+  };
+
+  if (editingId) {
+    const idx = orders.findIndex(x=>x.id===editingId);
+    orders[idx] = { ...orders[idx], ...data };
+  } else {
+    orders.push({ id: genId(), status: 'waiting', ...data });
+  }
+  saveData();
+  closeForm();
+  renderPage(getCurrentPage());
+  showToast(editingId ? '訂單已更新 ✓' : '新增訂單成功 ✓');
+}
+
+
+
+// ── Photos ─────────────────────────────────────────────
+function renderPhotoItems(photos, orderId=null, mode='form') {
+  if (!photos || photos.length === 0) return '';
+  return photos.map((p, idx) => {
+    const src = p.data || p;
+    const name = p.name || `寵物照片 ${idx + 1}`;
+    const safeName = String(name).replace(/"/g, '&quot;');
+    const removeBtn = mode === 'form'
+      ? `<button type="button" class="photo-remove" onclick="removeFormPhoto(${idx})">×</button>`
+      : `<button type="button" class="photo-remove" onclick="removeDetailPhoto('${orderId}', ${idx})">×</button>`;
+    return `<div class="photo-item">
+      <img class="photo-thumb" src="${src}" alt="${safeName}" onclick="window.open('${src}', '_blank')">
+      ${removeBtn}
+    </div>`;
+  }).join('');
+}
+
+function renderFormPhotos() {
+  const grid = document.getElementById('form-photo-grid');
+  if (!grid) return;
+  grid.innerHTML = renderPhotoItems(formPhotos, null, 'form') || `<div style="font-size:12px;color:var(--text-light);padding:8px 0">尚未上傳寵物照片</div>`;
+}
+
+async function handleFormPhotoUpload(input) {
+  const files = [...(input.files || [])];
+  if (!files.length) return;
+  try {
+    for (const file of files) {
+      const data = await compressImageFile(file);
+      formPhotos.push({ name: file.name, data, createdAt: new Date().toISOString() });
+    }
+    renderFormPhotos();
+    showToast(`已加入 ${files.length} 張寵物照片`);
+  } catch (err) {
+    console.error(err);
+    showToast('照片上傳失敗，請換一張試試');
+  }
+  input.value = '';
+}
+
+function removeFormPhoto(idx) {
+  formPhotos.splice(idx, 1);
+  renderFormPhotos();
+}
+
+async function addDetailPhotos(id, input) {
+  const o = orders.find(x => x.id === id);
+  const files = [...(input.files || [])];
+  if (!o || !files.length) return;
+  try {
+    o.photos = o.photos || [];
+    for (const file of files) {
+      const data = await compressImageFile(file);
+      o.photos.push({ name: file.name, data, createdAt: new Date().toISOString() });
+    }
+    saveData();
+    openDetail(id);
+    renderPage(getCurrentPage());
+    showToast(`已上傳 ${files.length} 張寵物照片`);
+  } catch (err) {
+    console.error(err);
+    showToast('照片上傳失敗，localStorage 可能已滿');
+  }
+  input.value = '';
+}
+
+function removeDetailPhoto(id, idx) {
+  const o = orders.find(x => x.id === id);
+  if (!o || !o.photos) return;
+  o.photos.splice(idx, 1);
+  saveData();
+  openDetail(id);
+  renderPage(getCurrentPage());
+  showToast('已刪除照片');
+}
+
+function compressImageFile(file, maxSize=1000, quality=0.72) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── Delete ─────────────────────────────────────────────
+let pendingDeleteId = null;
+function confirmDelete(id) {
+  pendingDeleteId = id;
+  const o = orders.find(x=>x.id===id);
+  document.getElementById('confirm-msg').textContent = `確定要刪除「${o?.clientName||'此訂單'}」嗎？此操作無法復原。`;
+  document.getElementById('confirm-modal').classList.add('show');
+  document.getElementById('confirm-ok-btn').onclick = () => {
+    orders = orders.filter(x=>x.id!==pendingDeleteId);
+    saveData();
+    closeConfirm(); closeDetail(); closeForm();
+    renderPage(getCurrentPage());
+    showToast('訂單已刪除');
+  };
+}
+function closeConfirm() { document.getElementById('confirm-modal').classList.remove('show'); pendingDeleteId=null; }
+
+// ── Search (stub) ──────────────────────────────────────
+function openSearch() {
+  const q = prompt('搜尋 LINE 名稱或備註：');
+  if (!q) return;
+  const results = orders.filter(o =>
+    o.clientName?.includes(q) || o.notes?.includes(q)
+  );
+  if (results.length === 0) { showToast('找不到結果'); return; }
+  openDetail(results[0].id);
+}
+
+// ── Helpers ────────────────────────────────────────────
+function getCurrentPage() {
+  const p = document.querySelector('.page.active');
+  return p ? p.id.replace('page-','') : 'wait';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ── Demo data (first launch) ───────────────────────────
+if (orders.length === 0) {
+  const today8 = new Date(); today8.setHours(0,0,0,0);
+  const fmt = d => d.toISOString().slice(0,10);
+  const add = (d,n) => { const x=new Date(d); x.setDate(x.getDate()+n); return fmt(x); };
+  const seed = [
+    { id:genId(), clientName:'小花', drawItems:['大頭'], products:['鑰匙圈'], status:'waiting', paidAmount:2800, paidDate:add(today8,-20), startDate:add(today8,5), draftDeadline:add(today8,7), colorDeadline:add(today8,12) },
+    { id:genId(), clientName:'Mochi', drawItems:['半身'], products:['防水貼紙'], status:'drafting', paidAmount:3200, paidDate:add(today8,-10), startDate:add(today8,-2), draftDeadline:add(today8,1), colorDeadline:add(today8,6), shipDeadline:add(today8,20) },
+    { id:genId(), clientName:'YY', drawItems:['全身'], products:['法蘭絨毛毯'], status:'coloring', paidAmount:5500, paidDate:add(today8,-15), startDate:add(today8,-8), draftDeadline:add(today8,-6), colorDeadline:add(today8,2), shipDeadline:add(today8,18) },
+    { id:genId(), clientName:'阿喵', drawItems:['大頭'], products:[], status:'done', paidAmount:1800, paidDate:add(today8,-45), startDate:add(today8,-30), draftDeadline:add(today8,-28), colorDeadline:add(today8,-23), completedDate:add(today8,-20), shipDeadline:add(today8,-20) },
+  ];
+  orders = seed;
+  saveData();
+  renderPage('wait');
+}
+</script>
+</body>
+</html>
